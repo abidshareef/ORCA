@@ -1,0 +1,64 @@
+{
+  "scenarios": [
+    {
+      "id": "normal_ocean",
+      "name": "Normal Ocean State",
+      "description": "Balanced ecosystem with parameters within seasonal baselines.",
+      "locations": [
+        {
+          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "state": {
+            "temperature": 26.5, "salinity": 35.1, "dissolved_oxygen": 6.2, "ph": 8.1,
+            "chlorophyll": 0.4, "turbidity": 1.2, "pollution": 0.05, "biodiversity": 0.85,
+            "fisheries": 0.78, "current": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "marine_heatwave",
+      "name": "Marine Heatwave",
+      "description": "Significant temperature spike causing stress to marine life.",
+      "locations": [
+        {
+          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "state": {
+            "temperature": 29.8, "salinity": 35.3, "dissolved_oxygen": 5.1, "ph": 8.0,
+            "chlorophyll": 0.6, "turbidity": 1.4, "pollution": 0.08, "biodiversity": 0.62,
+            "fisheries": 0.55, "current": 0.6
+          }
+        }
+      ]
+    },
+    {
+      "id": "pollution_event",
+      "name": "Pollution Event",
+      "description": "Chemical/Plastic contamination detected with high turbidity.",
+      "locations": [
+        {
+          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "state": {
+            "temperature": 26.7, "salinity": 34.8, "dissolved_oxygen": 4.2, "ph": 7.7,
+            "chlorophyll": 0.3, "turbidity": 4.5, "pollution": 0.82, "biodiversity": 0.45,
+            "fisheries": 0.32, "current": 0.4
+          }
+        }
+      ]
+    },
+    {
+      "id": "combined_crisis",
+      "name": "Combined Ecosystem Crisis",
+      "description": "Temperature spike, low oxygen, and biodiversity decline forming a systemic risk.",
+      "locations": [
+        {
+          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "state": {
+            "temperature": 30.2, "salinity": 35.2, "dissolved_oxygen": 3.8, "ph": 7.9,
+            "chlorophyll": 0.7, "turbidity": 2.1, "pollution": 0.15, "biodiversity": 0.38,
+            "fisheries": 0.25, "current": 0.7
+          }
+        }
+      ]
+    }
+  ]
+}
