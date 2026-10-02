@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 500">
+<defs><linearGradient id="p" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#087f98"/><stop offset="1" stop-color="#123e52"/></linearGradient></defs>
+<rect width="1500" height="500" rx="24" fill="#07131f"/>
+<text x="70" y="70" fill="white" font-family="Arial" font-size="32" font-weight="700">From Marine Data to Explainable Intelligence</text>
+<text x="70" y="100" fill="#8eb7c2" font-family="Arial" font-size="16">The ORCA reasoning pipeline separates collection, specialization, synthesis and presentation.</text>
+<g font-family="Arial" text-anchor="middle">
+<g fill="url(#p)" stroke="#64d9e0" stroke-width="2">
+ <rect x="55" y="190" width="170" height="100" rx="16"/><rect x="265" y="190" width="170" height="100" rx="16"/>
+ <rect x="475" y="190" width="170" height="100" rx="16"/><rect x="685" y="190" width="170" height="100" rx="16"/>
+ <rect x="895" y="190" width="170" height="100" rx="16"/><rect x="1105" y="190" width="170" height="100" rx="16"/>
+ <rect x="1315" y="190" width="130" height="100" rx="16"/>
+</g>
+<g fill="white" font-size="18" font-weight="700">
+ <text x="140" y="232">DATA</text><text x="350" y="232">VALIDATE</text><text x="560" y="232">DISPATCH</text><text x="770" y="232">ANALYZE</text><text x="980" y="232">SYNTHESIZE</text><text x="1190" y="232">EXPLAIN</text><text x="1380" y="232">ACT</text>
+</g>
+<g fill="#9ed9df" font-size="13">
+ <text x="140" y="258">marine + geo</text><text x="350" y="258">schemas</text><text x="560" y="258">agents</text><text x="770" y="258">domain evidence</text><text x="980" y="258">risk + anomaly</text><text x="1190" y="258">provenance</text><text x="1380" y="258">decision support</text>
+</g>
+</g>
+<g stroke="#6ce0e6" stroke-width="3"><path d="M225 240 H265"/><path d="M435 240 H475"/><path d="M645 240 H685"/><path d="M855 240 H895"/><path d="M1065 240 H1105"/><path d="M1275 240 H1315"/></g>
+<text x="75" y="390" fill="#7fa9b5" font-family="monospace" font-size="15">Evidence remains structured so the final response can expose what was observed, how it was combined, and where uncertainty remains.</text>
+</svg>
