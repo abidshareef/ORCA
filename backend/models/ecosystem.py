@@ -1,25 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict
+import { BaseModel } from 'pydantic';
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 class Location(BaseModel):
     latitude: float
     longitude: float
     depth: float
-
-class EcosystemState(BaseModel):
-    location: Location
-    timestamp: datetime
-    temperature: float
-    salinity: float
-    dissolved_oxygen: float
-    ph: float
-    chlorophyll: float
-    turbidity: float
-    pollution: float
-    biodiversity: float
-    fisheries: float
-    current: float
 
 class AgentFinding(BaseModel):
     agent: str
@@ -36,15 +22,15 @@ class RiskAnalysis(BaseModel):
     risk_level: str # LOW, MODERATE, HIGH, CRITICAL
     confidence: float
     ecosystem_health: float
-    anomalies: List[Dict]
-    contributors: List[Dict]
+    anomalies: List[Dict[str, Any]]
+    contributors: List[Dict[str, Any]]
     agents: List[AgentFinding]
-    evidence: List[Dict]
-    interactions: List[Dict]
+    evidence: List[Dict[str, Any]]
+    interactions: List[Dict[str, Any]]
     explanation: str
     recommendation: str
-    uncertainty: Dict
-    data_quality: Dict
+    uncertainty: Dict[str, float]
+    data_quality: Dict[str, float]
 
 class Anomaly(BaseModel):
     parameter: str

@@ -9,6 +9,9 @@ from typing import List, Dict, Any
 from backend.models.ecosystem import EcosystemState, RiskAnalysis, Anomaly
 from backend.ml.anomaly import AnomalyDetector
 from backend.agents.orchestrator import OrcaOrchestrator
+from backend.database.db_manager import db
+
+app = FastAPI(title="ORCA Backend")
 
 app = FastAPI(title="ORCA Backend")
 
@@ -47,30 +50,56 @@ async def health():
 
 @app.post("/api/analyze", response_model=RiskAnalysis)
 async def analyze_ecosystem(request: AnalysisRequest):
-    # 1. Load scenario data
+    # 1. Load scenario data from DB
     try:
-        with open("data/demo/scenarios.json", "r") as f:
-            data = json.load(f)
-            scenario = next((s for s in data["scenarios"] if s["id"] == request.scenario_id), None)
-            if not scenario:
-                raise HTTPException(status_code=404, detail="Scenario not found")
-            
-            # Use the first location in the scenario for the demo
-            loc_data = scenario["locations"][0]
-            state_dict = {**loc_data["state"], **loc_data}
-            state_dict["timestamp"] = datetime.now()
-            
+        query = """
+            SELECT l.latitude, l.longitude, l.depth, o.*
+            FROM locations l
+            JOIN ecosystem_observations o ON l.id = o.location_id
+            WHERE l.name = %s
+            ORDER BY o.timestamp DESC LIMIT 1
+        """
+        scenario_map = {
+            "normal_ocean": "Normal Ocean State",
+            "marine_heatwave": "Marine Heatwave",
+            "pollution_event": "Pollution Event",
+            "combined_crisis": "Combined Ecosystem Crisis"
+        }
+        name = scenario_map.get(request.scenario_id, request.scenario_id)
+
+        result = db.fetch_one(query, (name,))
+        if not result:
+            raise HTTPException(status_code=404, detail="Scenario not found in database")
+
+        state_dict = {
+            "latitude": result["latitude"],
+            "longitude": result["longitude"],
+            "depth": result["depth"],
+            "temperature": result["temperature"],
+            "salinity": result["salinity"],
+            "dissolved_oxygen": result["dissolved_oxygen"],
+            "ph": result["ph"],
+            "chlorophyll": result["chlorophyll"],
+            "turbidity": result["turbidity"],
+            "pollution": result["pollution"],
+            "biodiversity": result["biodiversity"],
+            "fisheries": result["fisheries"],
+            "current": result["current"],
+            "timestamp": result["timestamp"]
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading scenario: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
     # 2. Run Anomaly Detection
-    # Pass only the numeric state to the detector
     numeric_state = {k: v for k, v in state_dict.items() if isinstance(v, (int, float))}
-    anomalies = detector.calculate_z_scores(numeric_state, BASELINES)
+    anomalies = detector.calculate_z_scores(numeric_state)
 
     # 3. Orchestrate Agent Analysis
     result = await orchestrator.run_analysis(state_dict, anomalies)
-    
+
     return result
 
 @app.get("/api/scenarios")

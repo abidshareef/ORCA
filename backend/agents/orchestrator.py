@@ -1,6 +1,7 @@
 import asyncio
 from typing import List, Dict, Any
 from backend.models.ecosystem import AgentFinding, RiskAnalysis, Location
+
 from backend.agents.ocean import OceanMonitoringAgent
 from backend.agents.biodiversity import BiodiversityAgent
 from backend.agents.pollution import PollutionDetectionAgent
@@ -21,20 +22,18 @@ class OrcaOrchestrator:
         # 1. Parallel Execution of Specialized Agents
         tasks = [agent.analyze(state, anomalies) for agent in self.agents]
         findings = await asyncio.gather(*tasks)
-        
+
         # 2. Confidence-Weighted Aggregation
-        # Risk Score R = Σ(w_i * c_i * y_i) / Σ(w_i * c_i)
-        # For prototype, weights w_i are equal
         total_weighted_score = 0.0
         total_weight = 0.0
-        
+
         for f in findings:
-            weight = 1.0 
+            weight = 1.0
             total_weighted_score += weight * f.confidence * f.prediction
             total_weight += weight * f.confidence
-            
+
         risk_score = total_weighted_score / total_weight if total_weight > 0 else 0.0
-        
+
         # 3. Risk Level Classification
         if risk_score > 0.75:
             risk_level = "CRITICAL"
@@ -45,27 +44,44 @@ class OrcaOrchestrator:
         else:
             risk_level = "LOW"
 
-        # 4. Interaction Reasoning (XAI)
-        # Example: High Temp + Low DO -> Synergy
+        # 4. Dynamic Interaction Reasoning (Improved XAI)
+        # Instead of hardcoded thresholds, we identify synergistic stress based on anomaly patterns
         interactions = []
-        temp_val = state.get("temperature", 0)
-        do_val = state.get("dissolved_oxygen", 100)
-        
-        if temp_val > 29 and do_val < 4.5:
-            interactions.append({
-                "pair": ["Temperature", "Dissolved Oxygen"],
-                "effect": "Synergistic Stress",
-                "description": "High temperature reduces oxygen solubility, compounding physiological stress on marine organisms."
-            })
+
+        # Identify which parameters are currently anomalous (Z-score high)
+        anomalous_params = {a.parameter for a in anomalies if a.severity == "ANOMALY"}
+
+        # Synergy Mapping: If both parameters in a pair are anomalous, trigger synergistic risk
+        synergies = [
+            {
+                "pair": ["temperature", "dissolved_oxygen"],
+                "effect": "Synergistic Physiological Stress",
+                "description": "Combined high temperature and low oxygen levels compound respiratory stress on marine organisms."
+            },
+            {
+                "pair": ["pollution", "biodiversity"],
+                "effect": "Ecotoxicological Collapse",
+                "description": "Elevated pollution levels are directly correlating with a rapid decline in species biodiversity."
+            },
+            {
+                "pair": ["temperature", "ph"],
+                "effect": "Climatic Destabilization",
+                "description": "Concurrent warming and acidification are compromising calcification processes in coral and shellfish."
+            }
+        ]
+
+        for synergy in synergies:
+            if all(p in anomalous_params for p in synergy["pair"]):
+                interactions.append(synergy)
 
         # 5. Explanation Generation
         top_findings = sorted(findings, key=lambda x: x.prediction, reverse=True)
         explanation = f"The system detected a {risk_level} risk level (Score: {risk_score:.2f}). "
         if top_findings:
             explanation += f"The primary driver is {top_findings[0].finding} detected by the {top_findings[0].agent}."
-        
+
         if interactions:
-            explanation += " Synergistic effects between temperature and dissolved oxygen further elevate the risk."
+            explanation += f" {len(interactions)} synergistic interactions were detected, further elevating the systemic risk."
 
         # 6. Recommendation
         recommendation = "Continue routine monitoring."
@@ -77,7 +93,6 @@ class OrcaOrchestrator:
             recommendation = "INCREASED VIGILANCE: Monitor trends over the next 72 hours for potential escalation."
 
         # 7. Ecosystem Health Index (EHI)
-        # EHI = 1 - RiskScore (simplified)
         ehi = 1.0 - risk_score
 
         return RiskAnalysis(
