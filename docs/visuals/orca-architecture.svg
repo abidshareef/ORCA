@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 850">
+<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#06111f"/><stop offset="1" stop-color="#102f43"/></linearGradient></defs>
+<rect width="1500" height="850" rx="24" fill="url(#b)"/>
+<text x="70" y="75" fill="white" font-family="Arial" font-size="34" font-weight="700">ORCA Collaborative Intelligence Architecture</text>
+<text x="70" y="108" fill="#8eb7c2" font-family="Arial" font-size="17">Specialized agents collaborate through an orchestration and evidence layer.</text>
+<g font-family="Arial" font-size="17" text-anchor="middle">
+ <g fill="#153f54" stroke="#51d4dd" stroke-width="2">
+  <rect x="70" y="165" width="210" height="70" rx="14"/><rect x="320" y="165" width="210" height="70" rx="14"/>
+  <rect x="570" y="165" width="210" height="70" rx="14"/><rect x="820" y="165" width="210" height="70" rx="14"/>
+  <rect x="1070" y="165" width="210" height="70" rx="14"/>
+ </g>
+ <g fill="white">
+  <text x="175" y="207">Ocean</text><text x="425" y="207">Fisheries</text><text x="675" y="207">Biodiversity</text><text x="925" y="207">Climate</text><text x="1175" y="207">Pollution</text>
+ </g>
+ <rect x="510" y="330" width="480" height="95" rx="18" fill="#0b5c70" stroke="#7ce7ed" stroke-width="3"/>
+ <text x="750" y="370" fill="white" font-size="24" font-weight="700">AGENT ORCHESTRATOR</text>
+ <text x="750" y="399" fill="#b6eaf0" font-size="15">parallel dispatch • coordination • synthesis</text>
+ <rect x="350" y="505" width="800" height="110" rx="18" fill="#123b4c" stroke="#5db9c6" stroke-width="2"/>
+ <text x="750" y="550" fill="white" font-size="23" font-weight="700">EVIDENCE + RISK + ANOMALY LAYER</text>
+ <text x="750" y="579" fill="#b6eaf0">structured outputs • confidence context • spatial constraints</text>
+ <g fill="#173b4c" stroke="#58cbd5" stroke-width="2">
+  <rect x="160" y="705" width="250" height="70" rx="14"/><rect x="625" y="705" width="250" height="70" rx="14"/><rect x="1090" y="705" width="250" height="70" rx="14"/>
+ </g>
+ <g fill="white"><text x="285" y="747">FastAPI / API</text><text x="750" y="747">WebGIS / Charts</text><text x="1215" y="747">PostgreSQL / Data</text></g>
+</g>
+<g stroke="#6ce0e6" stroke-width="3" fill="none">
+ <path d="M175 235 V285 H570 V330"/><path d="M425 235 V280 H620 V330"/><path d="M675 235 V330"/><path d="M925 235 V280 H880 V330"/><path d="M1175 235 V285 H930 V330"/>
+ <path d="M750 425 V505"/>
+ <path d="M550 615 V705"/><path d="M750 615 V705"/><path d="M950 615 V705"/>
+</g>
+</svg>
