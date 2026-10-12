@@ -293,7 +293,7 @@ export default function App() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          ) : <div className="empty-chart"><span className="empty-icon">↗</span><strong>No analysis yet</strong><p>Run a scenario to view all five agent outputs.</p></div>}
+          ) : <div className="empty-chart"><span className="empty-icon">↗</span><strong>{analysis ? "Insufficient ecological data" : "No analysis yet"}</strong><p>{analysis ? "ORCA cannot calculate agent risk until valid ecosystem measurements are available." : "Run a scenario to view agent outputs."}</p></div>}
           <div className="agent-legend"><span><i className="legend-dot" /> 5 specialized agents</span><span>Confidence-weighted synthesis</span></div>
         </article>
       </section>
@@ -315,6 +315,7 @@ export default function App() {
             {agent.evidence?.length > 0 && <ul className="evidence-list">{agent.evidence.slice(0, 3).map((item, index) => <li key={index}>{item}</li>)}</ul>}
           </article>
         ))}
+        {analysis && !analysis.agents?.length && <div className="empty-state panel"><span className="empty-icon">◎</span><h3>Insufficient ecological data</h3><p>No domain-agent findings were produced because the required ecological measurements are missing. Load valid observations and run the analysis again.</p></div>}
         {!analysis && <div className="empty-state panel"><span className="empty-icon">◎</span><h3>Waiting for a scenario</h3><p>Run an analysis to populate the agent evidence, anomaly signals and recommendations.</p></div>}
       </section>
 
