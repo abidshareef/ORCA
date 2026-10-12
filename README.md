@@ -341,7 +341,10 @@ ORCA/
 |   +-- demo/
 |       +-- scenarios.json
 |
-+-- frontend/
++-- frontend-app/
+|   +-- src/
+|   +-- package.json
+|   +-- vercel.json
 |
 +-- docs/
 |   +-- visuals/
@@ -390,28 +393,36 @@ ORCA/
                           |
         +-----------------+-----------------+
         |                 |                 |
-      QUERY             HEALTH           LAYERS
+      QUERY             HEALTH          SCENARIOS
         |                 |                 |
         v                 v                 v
-   ORCHESTRATOR      SYSTEM STATUS     GEOJSON DATA
+   QUERY PLANNER      READINESS       DEMO JSON / DB
+        |
+        +-----------------------------+
+        |                             |
+        v                             v
+   DOMAIN AGENTS                MARINE PROVIDER
+        |                             |
+        v                             v
+   RISK + EVIDENCE               WAVE FORECAST
         |
         v
-   AGGREGATION
-        |
-        v
-   UNIFIED RESULT
+   EXPLAINABLE RESULT
 ~~~
 
-Core application capabilities include:
+Current API endpoints (source of truth: `backend/main.py`):
 
-| Capability | Purpose |
-|---|---|
-| Query | Main conversational / reasoning workflow |
-| Health | Service and agent health |
-| History | Session context |
-| Layers | Geospatial layers |
-| Feedback | Ground-truth / user feedback |
-| Mock Query | Frontend integration and demonstration |
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/` | Service metadata and documentation links |
+| GET | `/api/health` | Liveness check |
+| GET | `/api/ready` | Readiness check for the configured data path |
+| GET | `/api/scenarios` | List the checked-in demo scenarios |
+| POST | `/api/analyze` | Run the multi-agent assessment for a scenario |
+| POST | `/api/query` | Route a natural-language query to a supported workflow |
+| GET | `/api/marine/conditions` | Retrieve validated Open-Meteo wave-forecast context for coordinates |
+
+The query planner is deterministic keyword routing, not an LLM. Ecosystem assessments use scenario data by default (or configured PostgreSQL observations). The live provider currently supplies wave-forecast context only. History, feedback, live satellite/ecological ingestion, validated PFZ discovery, and route/geofence workflows are not currently exposed as implemented API endpoints.
 
 ---
 
