@@ -47,6 +47,7 @@ def plan_query(query: str) -> QueryPlan:
 
     if safety:
         intent = "marine_conditions"
+        selected = ["Ocean Monitoring Agent", "Climate & Oceanographic Agent"]
         sources = ["Open-Meteo Marine API (wave forecast; when coordinates are provided)"]
         limitations = ["Wave forecasts are not official maritime warnings or a vessel-specific safety clearance."]
     elif pfz:
