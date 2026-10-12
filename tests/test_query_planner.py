@@ -28,3 +28,11 @@ def test_empty_query_is_rejected():
         assert "empty" in str(exc)
     else:
         raise AssertionError("empty query should fail")
+
+
+
+def test_marine_conditions_plan_does_not_select_ecosystem_agents():
+    plan = plan_query("Show the wave forecast")
+    assert plan.intent == "marine_conditions"
+    assert plan.selected_agents == []
+    assert "Open-Meteo Marine API" in plan.required_data_sources[0]
