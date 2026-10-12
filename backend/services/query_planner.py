@@ -47,7 +47,7 @@ def plan_query(query: str) -> QueryPlan:
 
     if safety:
         intent = "marine_conditions"
-        selected = ["Ocean Monitoring Agent", "Climate & Oceanographic Agent"]
+        selected = []  # Wave-forecast requests use the live provider, not ecosystem agents.
         sources = ["Open-Meteo Marine API (wave forecast; when coordinates are provided)"]
         limitations = ["Wave forecasts are not official maritime warnings or a vessel-specific safety clearance."]
     elif pfz:
@@ -63,7 +63,7 @@ def plan_query(query: str) -> QueryPlan:
         sources = ["ORCA scenario data (demo mode) or configured PostgreSQL observations"]
         limitations = ["Domain agents currently use prototype heuristics, not scientifically validated predictive models."]
 
-    if not selected:
+    if not selected and not safety:
         selected = list(AGENT_KEYWORDS.keys())
 
     return QueryPlan(
