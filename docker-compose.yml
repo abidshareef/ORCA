@@ -1,16 +1,21 @@
-version: '3.8'
 services:
   db:
     image: postgis/postgis:15-3.3
     container_name: orca-db
     environment:
-      - POSTGRES_USER=orca_user
-      - POSTGRES_PASSWORD=orca_password
-      - POSTGRES_DB=orca_ecosystem
+      POSTGRES_USER: orca_user
+      POSTGRES_PASSWORD: orca_password
+      POSTGRES_DB: orca_ecosystem
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orca_user -d orca_ecosystem"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
 volumes:
   postgres_data:
