@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from backend.models.ecosystem import AgentFinding, RiskAnalysis, Location
 
@@ -31,6 +32,49 @@ class OrcaOrchestrator:
             selected_agents = [agent for agent in self.agents if agent.name in requested]
         if not selected_agents:
             selected_agents = self.agents
+
+        expected_parameters = [
+            "temperature", "salinity", "dissolved_oxygen", "ph", "chlorophyll",
+            "turbidity", "pollution", "biodiversity", "fisheries", "current",
+        ]
+        present_parameters = [
+            key for key in expected_parameters
+            if isinstance(state.get(key), (int, float))
+            and not isinstance(state.get(key), bool)
+        ]
+        completeness = len(present_parameters) / len(expected_parameters)
+
+        # Missing all ecological measurements must never be presented as LOW risk.
+        # Return an explicit unknown result instead of running agents against defaults.
+        if not present_parameters:
+            return RiskAnalysis(
+                location=Location(
+                    latitude=state.get("latitude", 0),
+                    longitude=state.get("longitude", 0),
+                    depth=state.get("depth", 0),
+                ),
+                timestamp=state.get("timestamp") or datetime.now(timezone.utc),
+                risk_score=None,
+                risk_level="UNKNOWN",
+                confidence=0.0,
+                ecosystem_health=None,
+                anomalies=[
+                    {"parameter": a.parameter, "z_score": a.z_score, "severity": a.severity}
+                    for a in anomalies
+                ],
+                contributors=[],
+                agents=[],
+                evidence=[],
+                interactions=[],
+                explanation="No ecological measurements are available. ORCA cannot estimate ecosystem risk until valid observations are supplied.",
+                recommendation="DATA QUALITY WARNING: no expected ecosystem parameters are available. Load valid observations and retry; do not interpret this result as low risk.",
+                uncertainty={"data_gap": 1.0},
+                data_quality={
+                    "completeness": 0.0,
+                    "available_parameters": 0.0,
+                    "expected_parameters": float(len(expected_parameters)),
+                },
+            )
 
         # 1. Parallel Execution of the selected specialized agents.
         tasks = [agent.analyze(state, anomalies) for agent in selected_agents]
@@ -109,16 +153,6 @@ class OrcaOrchestrator:
         ehi = 1.0 - risk_score
 
         # Report measurable input completeness instead of hard-coded quality claims.
-        expected_parameters = [
-            "temperature", "salinity", "dissolved_oxygen", "ph", "chlorophyll",
-            "turbidity", "pollution", "biodiversity", "fisheries", "current",
-        ]
-        present_parameters = [
-            key for key in expected_parameters
-            if isinstance(state.get(key), (int, float))
-            and not isinstance(state.get(key), bool)
-        ]
-        completeness = len(present_parameters) / len(expected_parameters)
         data_gap = 1.0 - completeness
         adjusted_confidence = (
             sum(f.confidence for f in findings) / len(findings)
