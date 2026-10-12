@@ -101,3 +101,46 @@ def test_analysis_reports_actual_data_completeness():
     payload = response.json()
     assert payload["data_quality"]["completeness"] == 1.0
     assert payload["uncertainty"]["data_gap"] == 0.0
+
+
+def test_marine_conditions_endpoint_returns_controlled_503(monkeypatch):
+    import backend.main as main
+
+    async def unavailable(*args, **kwargs):
+        raise main.MarineProviderError("Marine forecast provider is temporarily unavailable")
+
+    monkeypatch.setattr(main, "get_marine_conditions", unavailable)
+    response = client.get("/api/marine/conditions?latitude=15.5&longitude=70.5")
+    assert response.status_code == 503
+    assert "temporarily unavailable" in response.json()["detail"]
+
+
+def test_marine_query_returns_live_source_metadata(monkeypatch):
+    import backend.main as main
+
+    async def fake_conditions(latitude, longitude):
+        return {
+            "location": {"latitude": latitude, "longitude": longitude},
+            "forecast_time_utc": "2026-10-12T18:00:00+00:00",
+            "fetched_at_utc": "2026-10-12T18:01:00+00:00",
+            "wave_height_m": 1.2,
+            "wave_period_s": None,
+            "wave_direction_deg": 180.0,
+            "missing_optional_fields": ["wave_period_s"],
+            "display_band": "no_high_wave_flag_from_this_threshold_only",
+            "source": "Open-Meteo Marine API",
+            "source_url": "https://marine-api.open-meteo.com/v1/marine",
+            "data_type": "forecast",
+            "limitations": ["Not an official maritime warning."],
+        }
+
+    monkeypatch.setattr(main, "get_marine_conditions", fake_conditions)
+    response = client.post(
+        "/api/query",
+        json={"query": "Show the wave forecast", "latitude": 15.5, "longitude": 70.5},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["marine_conditions"]["source"] == "Open-Meteo Marine API"
+    assert payload["marine_conditions"]["missing_optional_fields"] == ["wave_period_s"]
+    assert "not an official maritime warning" in payload["marine_conditions"]["limitations"][0].lower()

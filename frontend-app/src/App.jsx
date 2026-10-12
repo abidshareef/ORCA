@@ -21,7 +21,8 @@ function FitScenario({ position }) {
 }
 
 function formatPercent(value) {
-  return `${Math.round((Number(value) || 0) * 100)}%`;
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  return `${Math.round(Number(value) * 100)}%`;
 }
 
 function RiskBadge({ level }) {
@@ -50,8 +51,8 @@ export default function App() {
 
   const checkApi = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/health`);
-      if (!response.ok) throw new Error("API health check failed");
+      const response = await fetch(`${API_BASE}/api/ready`);
+      if (!response.ok) throw new Error("API readiness check failed");
       setApiStatus("online");
     } catch {
       setApiStatus("offline");
@@ -123,6 +124,10 @@ export default function App() {
       if (result.analysis) {
         setAnalysis(result.analysis);
         setLastUpdated(new Date().toLocaleTimeString());
+      } else if (result.plan?.intent === "marine_conditions") {
+        // Do not leave an unrelated ecosystem scenario visible under a wave forecast.
+        setAnalysis(null);
+        setLastUpdated("");
       }
       setApiStatus("online");
     } catch (err) {
@@ -213,19 +218,23 @@ export default function App() {
       {queryError && <div className="error-banner" role="alert"><strong>Query unavailable</strong><span>{queryError}</span></div>}
       {queryResult && (
         <section className="query-result panel" aria-live="polite">
-          <div className="panel-heading"><div><span className="eyebrow">QUERY PLAN</span><h3>{queryResult.plan.intent.replaceAll("_", " ")}</h3></div><span className="map-tag">{queryResult.plan.selected_agents.length} agents selected</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">QUERY PLAN</span><h3>{queryResult.plan.intent.replaceAll("_", " ")}</h3></div><span className="map-tag">{queryResult.plan.selected_agents.length ? `${queryResult.plan.selected_agents.length} agents selected` : "Live provider route"}</span></div>
           <p className="query-question">“{queryResult.query}”</p>
           <div className="query-chip-row">{queryResult.plan.selected_agents.map((agent) => <span className="query-chip" key={agent}>{agent}</span>)}</div>
           {queryResult.marine_conditions && (
-            <div className="marine-condition-grid">
-              <div><span>WAVE HEIGHT</span><strong>{queryResult.marine_conditions.wave_height_m.toFixed(1)} m</strong></div>
-              <div><span>WAVE PERIOD</span><strong>{queryResult.marine_conditions.wave_period_s == null ? "—" : `${queryResult.marine_conditions.wave_period_s.toFixed(1)} s`}</strong></div>
-              <div><span>DISPLAY BAND</span><strong>{queryResult.marine_conditions.display_band.replaceAll("_", " ")}</strong></div>
-              <div><span>FORECAST TIME</span><strong>{new Date(queryResult.marine_conditions.forecast_time_utc).toLocaleString()}</strong></div>
-            </div>
+            <>
+              <div className="marine-condition-grid">
+                <div><span>WAVE HEIGHT</span><strong>{queryResult.marine_conditions.wave_height_m.toFixed(1)} m</strong></div>
+                <div><span>WAVE PERIOD</span><strong>{queryResult.marine_conditions.wave_period_s == null ? "—" : `${queryResult.marine_conditions.wave_period_s.toFixed(1)} s`}</strong></div>
+                <div><span>DISPLAY BAND</span><strong>{queryResult.marine_conditions.display_band.replaceAll("_", " ")}</strong></div>
+                <div><span>FORECAST TIME (UTC)</span><strong>{new Date(queryResult.marine_conditions.forecast_time_utc).toLocaleString()}</strong></div>
+              </div>
+              <p className="query-notice">Source: <a href={queryResult.marine_conditions.source_url} target="_blank" rel="noreferrer">{queryResult.marine_conditions.source}</a> · Forecast, not a direct observation.</p>
+              {(queryResult.marine_conditions.limitations || []).map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
+            </>
           )}
           {queryResult.notice && <p className="query-notice">{queryResult.notice}</p>}
-          {queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
+          {!queryResult.marine_conditions && queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
         </section>
       )}
 
@@ -239,7 +248,7 @@ export default function App() {
           <span className="metric-label">Aggregate risk</span>
           <div className="metric-value">{analysis ? formatPercent(analysis.risk_score) : "—"}</div>
           <div className="metric-foot">Confidence-weighted agent synthesis</div>
-          <div className="meter"><span style={{ width: analysis ? formatPercent(analysis.risk_score) : "0%" }} /></div>
+          <div className="meter"><span style={{ width: analysis?.risk_score != null ? formatPercent(analysis.risk_score) : "0%" }} /></div>
         </article>
         <article className="metric-card">
           <span className="metric-label">Risk classification</span>
@@ -288,7 +297,7 @@ export default function App() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          ) : <div className="empty-chart"><span className="empty-icon">↗</span><strong>No analysis yet</strong><p>Run a scenario to view all five agent outputs.</p></div>}
+          ) : <div className="empty-chart"><span className="empty-icon">↗</span><strong>{analysis ? "Insufficient ecological data" : "No analysis yet"}</strong><p>{analysis ? "ORCA cannot calculate agent risk until valid ecosystem measurements are available." : "Run a scenario to view agent outputs."}</p></div>}
           <div className="agent-legend"><span><i className="legend-dot" /> 5 specialized agents</span><span>Confidence-weighted synthesis</span></div>
         </article>
       </section>
@@ -310,6 +319,7 @@ export default function App() {
             {agent.evidence?.length > 0 && <ul className="evidence-list">{agent.evidence.slice(0, 3).map((item, index) => <li key={index}>{item}</li>)}</ul>}
           </article>
         ))}
+        {analysis && !analysis.agents?.length && <div className="empty-state panel"><span className="empty-icon">◎</span><h3>Insufficient ecological data</h3><p>No domain-agent findings were produced because the required ecological measurements are missing. Load valid observations and run the analysis again.</p></div>}
         {!analysis && <div className="empty-state panel"><span className="empty-icon">◎</span><h3>Waiting for a scenario</h3><p>Run an analysis to populate the agent evidence, anomaly signals and recommendations.</p></div>}
       </section>
 
