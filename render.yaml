@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: orca-api
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/ready
+    autoDeploy: false
+    envVars:
+      - key: ORCA_DATA_MODE
+        value: demo
+      - key: CORS_ORIGINS
+        value: https://your-orca-dashboard.vercel.app
+      - key: LOG_LEVEL
+        value: INFO
