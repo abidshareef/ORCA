@@ -14,4 +14,8 @@ def test_incomplete_inputs_reduce_confidence_and_add_warning():
     assert result.data_quality["completeness"] == 0.0
     assert result.confidence == 0.0
     assert result.uncertainty["data_gap"] == 1.0
-    assert "DATA QUALITY WARNING" in result.recommendation
+    assert result.risk_level == "UNKNOWN"
+    assert result.risk_score is None
+    assert result.ecosystem_health is None
+    assert result.agents == []
+    assert "do not interpret this result as low risk" in result.recommendation.lower()
