@@ -144,7 +144,7 @@ export default function App() {
           <select id="scenario-select" value={scenarioId} onChange={(event) => setScenarioId(event.target.value)}>
             {scenarios.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
           </select>
-          <button className="primary-button" onClick={() => runAnalysis(scenarioId)} disabled={loading || apiStatus === "offline"}>
+          <button className="primary-button" onClick={() => runAnalysis(scenarioId)} disabled={loading}>
             {loading ? <><span className="spinner" /> Analyzing</> : "Run analysis"}
           </button>
         </div>
