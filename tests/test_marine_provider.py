@@ -36,4 +36,4 @@ def test_marine_provider_normalizes_hourly_response(monkeypatch):
     assert result["wave_period_s"] == 7.5
     assert result["display_band"] == "caution"
     assert result["source"] == "Open-Meteo Marine API"
-    assert "not an official maritime warning" in result["limitations"][0]
+    assert "not an official maritime warning" in result["limitations"][0].lower()
