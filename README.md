@@ -393,16 +393,21 @@ ORCA/
                           |
         +-----------------+-----------------+
         |                 |                 |
-      QUERY             HEALTH           LAYERS
+      QUERY             HEALTH          SCENARIOS
         |                 |                 |
         v                 v                 v
-   ORCHESTRATOR      SYSTEM STATUS     GEOJSON DATA
+   QUERY PLANNER      READINESS       DEMO JSON / DB
+        |
+        +-----------------------------+
+        |                             |
+        v                             v
+   DOMAIN AGENTS                MARINE PROVIDER
+        |                             |
+        v                             v
+   RISK + EVIDENCE               WAVE FORECAST
         |
         v
-   AGGREGATION
-        |
-        v
-   UNIFIED RESULT
+   EXPLAINABLE RESULT
 ~~~
 
 Current API endpoints (source of truth: `backend/main.py`):
