@@ -21,7 +21,8 @@ function FitScenario({ position }) {
 }
 
 function formatPercent(value) {
-  return `${Math.round((Number(value) || 0) * 100)}%`;
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  return `${Math.round(Number(value) * 100)}%`;
 }
 
 function RiskBadge({ level }) {
@@ -243,7 +244,7 @@ export default function App() {
           <span className="metric-label">Aggregate risk</span>
           <div className="metric-value">{analysis ? formatPercent(analysis.risk_score) : "—"}</div>
           <div className="metric-foot">Confidence-weighted agent synthesis</div>
-          <div className="meter"><span style={{ width: analysis ? formatPercent(analysis.risk_score) : "0%" }} /></div>
+          <div className="meter"><span style={{ width: analysis?.risk_score != null ? formatPercent(analysis.risk_score) : "0%" }} /></div>
         </article>
         <article className="metric-card">
           <span className="metric-label">Risk classification</span>
