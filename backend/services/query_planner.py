@@ -29,7 +29,7 @@ AGENT_KEYWORDS = {
     "Pollution Detection Agent": ("pollution", "oil spill", "plastic", "turbidity", "contamination", "waste"),
 }
 
-SAFETY_TERMS = ("safe to sail", "sea safety", "wave", "waves", "swell", "rough sea", "boat safety", "marine weather", "sea condition", "wind at sea")
+SAFETY_TERMS = ("safe to sail", "sea safety", "wave", "waves", "swell", "rough sea", "boat safety", "marine weather", "sea condition")
 PFZ_TERMS = ("pfz", "potential fishing zone", "best place to fish", "fishing zone")
 
 
