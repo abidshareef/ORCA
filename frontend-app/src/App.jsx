@@ -51,8 +51,8 @@ export default function App() {
 
   const checkApi = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/health`);
-      if (!response.ok) throw new Error("API health check failed");
+      const response = await fetch(`${API_BASE}/api/ready`);
+      if (!response.ok) throw new Error("API readiness check failed");
       setApiStatus("online");
     } catch {
       setApiStatus("offline");
