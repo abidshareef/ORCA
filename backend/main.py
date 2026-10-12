@@ -257,6 +257,15 @@ async def query_orca(request: QueryRequest):
         "notice": None,
     }
 
+    if plan.intent == "unsupported_query":
+        response["notice"] = (
+            "I could not route this question to an implemented ORCA capability. "
+            "No agents were run and no scenario analysis was generated. Try a question "
+            "about ocean conditions, water quality, fisheries/PFZ, biodiversity, climate, "
+            "pollution, or a wave forecast."
+        )
+        return response
+
     if plan.intent == "marine_conditions":
         if request.latitude is None or request.longitude is None:
             response["notice"] = "Provide both latitude and longitude to retrieve a live wave forecast."
