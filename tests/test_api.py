@@ -73,7 +73,7 @@ def test_pfz_query_discloses_missing_live_provider():
     assert payload["plan"]["intent"] == "potential_fishing_zone"
     assert payload["analysis"] is None
     assert payload["plan"]["selected_agents"] == ["Fisheries Agent", "Ocean Monitoring Agent"]
-    assert "live PFZ discovery is not available" in payload["notice"].lower()
+    assert "live pfz discovery is not available" in payload["notice"].lower()
 
 
 def test_marine_conditions_query_requires_coordinates():
