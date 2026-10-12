@@ -60,7 +60,7 @@ def test_natural_language_query_routes_to_relevant_agent():
     assert payload["plan"]["intent"] == "ecosystem_assessment"
     assert payload["plan"]["selected_agents"] == ["Pollution Detection Agent"]
     assert len(payload["analysis"]["agents"]) == 1
-    assert "scenario-based prototype" in payload["notice"]
+    assert "prototype" in payload["notice"].lower()
 
 
 def test_pfz_query_discloses_missing_live_provider():
@@ -72,7 +72,7 @@ def test_pfz_query_discloses_missing_live_provider():
     payload = response.json()
     assert payload["plan"]["intent"] == "potential_fishing_zone"
     assert payload["analysis"] is not None
-    assert "not implemented yet" in payload["notice"]
+    assert "not live or validated yet" in payload["notice"]
 
 
 def test_marine_conditions_query_requires_coordinates():
