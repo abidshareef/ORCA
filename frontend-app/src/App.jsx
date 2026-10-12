@@ -124,6 +124,10 @@ export default function App() {
       if (result.analysis) {
         setAnalysis(result.analysis);
         setLastUpdated(new Date().toLocaleTimeString());
+      } else if (result.plan?.intent === "marine_conditions") {
+        // Do not leave an unrelated ecosystem scenario visible under a wave forecast.
+        setAnalysis(null);
+        setLastUpdated("");
       }
       setApiStatus("online");
     } catch (err) {
@@ -230,7 +234,7 @@ export default function App() {
             </>
           )}
           {queryResult.notice && <p className="query-notice">{queryResult.notice}</p>}
-          {queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
+          {!queryResult.marine_conditions && queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
         </section>
       )}
 
