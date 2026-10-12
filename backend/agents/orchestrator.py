@@ -141,7 +141,6 @@ class OrcaOrchestrator:
             recommendation=recommendation,
             uncertainty={
                 "data_gap": round(data_gap, 3),
-                "model_variance": -1.0,
             },
             data_quality={
                 "completeness": round(completeness, 3),
