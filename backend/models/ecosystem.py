@@ -22,10 +22,10 @@ class AgentFinding(BaseModel):
 class RiskAnalysis(BaseModel):
     location: Location
     timestamp: datetime
-    risk_score: float = Field(ge=0.0, le=1.0)
+    risk_score: float | None = Field(default=None, ge=0.0, le=1.0)
     risk_level: str
     confidence: float = Field(ge=0.0, le=1.0)
-    ecosystem_health: float = Field(ge=0.0, le=1.0)
+    ecosystem_health: float | None = Field(default=None, ge=0.0, le=1.0)
     anomalies: List[Dict[str, Any]] = Field(default_factory=list)
     contributors: List[Dict[str, Any]] = Field(default_factory=list)
     agents: List[AgentFinding] = Field(default_factory=list)
