@@ -10,8 +10,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Smart%20India%20Hackathon-2026-0b2940?style=for-the-badge" alt="Smart India Hackathon 2026">
-  <img src="https://img.shields.io/badge/Problem%20Statement-SIH26176-0b2940?style=for-the-badge" alt="SIH26176">
+ 
   <img src="https://img.shields.io/badge/Architecture-Collaborative%20Agents-0b2940?style=for-the-badge" alt="Collaborative Agents">
   <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/Frontend-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
