@@ -120,6 +120,15 @@ class OrcaOrchestrator:
         ]
         completeness = len(present_parameters) / len(expected_parameters)
         data_gap = 1.0 - completeness
+        adjusted_confidence = (
+            sum(f.confidence for f in findings) / len(findings)
+        ) * completeness
+        if completeness < 0.7:
+            recommendation = (
+                f"DATA QUALITY WARNING: only {completeness:.0%} of expected ecosystem "
+                "parameters are available. Treat this assessment as provisional and "
+                "collect/validate missing observations before acting. " + recommendation
+            )
 
         return RiskAnalysis(
             location=Location(
@@ -130,7 +139,7 @@ class OrcaOrchestrator:
             timestamp=state.get("timestamp"),
             risk_score=risk_score,
             risk_level=risk_level,
-            confidence=sum(f.confidence for f in findings) / len(findings),
+            confidence=adjusted_confidence,
             ecosystem_health=ehi,
             anomalies=[{"parameter": a.parameter, "z_score": a.z_score, "severity": a.severity} for a in anomalies],
             contributors=[{"agent": f.agent, "contribution": f.prediction} for f in findings],
