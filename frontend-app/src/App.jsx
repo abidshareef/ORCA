@@ -217,12 +217,16 @@ export default function App() {
           <p className="query-question">“{queryResult.query}”</p>
           <div className="query-chip-row">{queryResult.plan.selected_agents.map((agent) => <span className="query-chip" key={agent}>{agent}</span>)}</div>
           {queryResult.marine_conditions && (
-            <div className="marine-condition-grid">
-              <div><span>WAVE HEIGHT</span><strong>{queryResult.marine_conditions.wave_height_m.toFixed(1)} m</strong></div>
-              <div><span>WAVE PERIOD</span><strong>{queryResult.marine_conditions.wave_period_s == null ? "—" : `${queryResult.marine_conditions.wave_period_s.toFixed(1)} s`}</strong></div>
-              <div><span>DISPLAY BAND</span><strong>{queryResult.marine_conditions.display_band.replaceAll("_", " ")}</strong></div>
-              <div><span>FORECAST TIME</span><strong>{new Date(queryResult.marine_conditions.forecast_time_utc).toLocaleString()}</strong></div>
-            </div>
+            <>
+              <div className="marine-condition-grid">
+                <div><span>WAVE HEIGHT</span><strong>{queryResult.marine_conditions.wave_height_m.toFixed(1)} m</strong></div>
+                <div><span>WAVE PERIOD</span><strong>{queryResult.marine_conditions.wave_period_s == null ? "—" : `${queryResult.marine_conditions.wave_period_s.toFixed(1)} s`}</strong></div>
+                <div><span>DISPLAY BAND</span><strong>{queryResult.marine_conditions.display_band.replaceAll("_", " ")}</strong></div>
+                <div><span>FORECAST TIME (UTC)</span><strong>{new Date(queryResult.marine_conditions.forecast_time_utc).toLocaleString()}</strong></div>
+              </div>
+              <p className="query-notice">Source: <a href={queryResult.marine_conditions.source_url} target="_blank" rel="noreferrer">{queryResult.marine_conditions.source}</a> · Forecast, not a direct observation.</p>
+              {(queryResult.marine_conditions.limitations || []).map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
+            </>
           )}
           {queryResult.notice && <p className="query-notice">{queryResult.notice}</p>}
           {queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
