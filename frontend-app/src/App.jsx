@@ -92,10 +92,13 @@ export default function App() {
     }
   };
 
-  const mapPosition = [
-    Number(analysis?.location?.latitude ?? 15.5),
-    Number(analysis?.location?.longitude ?? 70.5),
-  ];
+  const mapPosition = useMemo(
+    () => [
+      Number(analysis?.location?.latitude ?? 15.5),
+      Number(analysis?.location?.longitude ?? 70.5),
+    ],
+    [analysis?.location?.latitude, analysis?.location?.longitude],
+  );
   const chartData = (analysis?.agents || []).map((agent) => ({
     agent: agent.agent.replace(" Agent", "").replace(" & Oceanographic", ""),
     risk: Math.round((Number(agent.prediction) || 0) * 100),
