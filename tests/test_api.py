@@ -71,8 +71,9 @@ def test_pfz_query_discloses_missing_live_provider():
     assert response.status_code == 200, response.text
     payload = response.json()
     assert payload["plan"]["intent"] == "potential_fishing_zone"
-    assert payload["analysis"] is not None
-    assert "not live or validated yet" in payload["notice"]
+    assert payload["analysis"] is None
+    assert payload["plan"]["selected_agents"] == ["Fisheries Agent", "Ocean Monitoring Agent"]
+    assert "live pfz discovery is not available" in payload["notice"].lower()
 
 
 def test_marine_conditions_query_requires_coordinates():
@@ -157,3 +158,77 @@ def test_unrecognized_query_returns_no_analysis():
     assert payload["plan"]["selected_agents"] == []
     assert payload["analysis"] is None
     assert "no agents were run" in payload["notice"].lower()
+
+
+def test_pfz_rank_endpoint_ranks_supplied_observations_and_preserves_provenance():
+    from datetime import datetime, timezone
+
+    response = client.post(
+        "/api/pfz/rank",
+        json={
+            "candidates": [
+                {
+                    "id": "candidate-a",
+                    "latitude": 15.5,
+                    "longitude": 70.5,
+                    "observed_at": datetime.now(timezone.utc).isoformat(),
+                    "chlorophyll_mg_m3": 0.5,
+                    "sea_surface_temperature_c": 27.0,
+                    "dissolved_oxygen_mg_l": 6.0,
+                    "source": "test observation source",
+                    "source_url": "https://example.org/observations",
+                },
+                {
+                    "id": "candidate-b",
+                    "latitude": 16.0,
+                    "longitude": 71.0,
+                    "observed_at": datetime.now(timezone.utc).isoformat(),
+                    "chlorophyll_mg_m3": 0.01,
+                    "sea_surface_temperature_c": 20.0,
+                    "dissolved_oxygen_mg_l": 2.0,
+                    "source": "test observation source",
+                },
+            ]
+        },
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["ranking_method"] == "transparent_weighted_heuristic_v1"
+    assert payload["ranked_candidates"][0]["id"] == "candidate-a"
+    assert payload["ranked_candidates"][0]["rank"] == 1
+    assert payload["ranked_candidates"][0]["source_url"] == "https://example.org/observations"
+    assert any("not a validated Potential Fishing Zone forecast" in item for item in payload["limitations"])
+
+
+def test_pfz_rank_endpoint_rejects_missing_observation_fields():
+    response = client.post(
+        "/api/pfz/rank",
+        json={"candidates": [{"id": "incomplete", "latitude": 15.5, "longitude": 70.5}]},
+    )
+    assert response.status_code == 422
+
+
+def test_pfz_rank_endpoint_excludes_stale_observations():
+    from datetime import datetime, timedelta, timezone
+
+    response = client.post(
+        "/api/pfz/rank",
+        json={
+            "candidates": [
+                {
+                    "id": "stale",
+                    "latitude": 15.5,
+                    "longitude": 70.5,
+                    "observed_at": (datetime.now(timezone.utc) - timedelta(days=10)).isoformat(),
+                    "chlorophyll_mg_m3": 0.5,
+                    "sea_surface_temperature_c": 27.0,
+                    "dissolved_oxygen_mg_l": 6.0,
+                    "source": "test observation source",
+                }
+            ]
+        },
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["ranked_candidates"] == []
+    assert payload["excluded_candidates"][0]["id"] == "stale"
