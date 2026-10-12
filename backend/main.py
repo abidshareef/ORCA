@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -13,6 +13,8 @@ from backend.agents.orchestrator import OrcaOrchestrator
 from backend.database.db_manager import db
 from backend.ml.anomaly import AnomalyDetector
 from backend.models.ecosystem import RiskAnalysis
+from backend.services.query_planner import plan_query
+from backend.services.marine_provider import get_marine_conditions, MarineProviderError
 
 logger = logging.getLogger("orca")
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -49,6 +51,13 @@ orchestrator = OrcaOrchestrator()
 
 class AnalysisRequest(BaseModel):
     scenario_id: str = Field(default="normal_ocean", min_length=1, max_length=100)
+
+
+class QueryRequest(BaseModel):
+    query: str = Field(min_length=3, max_length=1000)
+    scenario_id: str = Field(default="normal_ocean", min_length=1, max_length=100)
+    latitude: Optional[float] = Field(default=None, ge=-90, le=90)
+    longitude: Optional[float] = Field(default=None, ge=-180, le=180)
 
 
 def load_scenarios() -> Dict[str, Dict[str, Any]]:
@@ -209,4 +218,105 @@ async def analyze_ecosystem(request: AnalysisRequest):
         raise HTTPException(
             status_code=500,
             detail="Analysis failed. Check the server logs for the underlying error.",
+        )
+
+
+
+@app.get("/api/marine/conditions")
+async def marine_conditions(
+    latitude: float = Query(..., ge=-90, le=90),
+    longitude: float = Query(..., ge=-180, le=180),
+):
+    """Fetch live wave-forecast context; this is not a maritime safety clearance."""
+    try:
+        return await get_marine_conditions(latitude, longitude)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    except MarineProviderError as exc:
+        logger.warning("Marine forecast unavailable: %s", exc)
+        raise HTTPException(status_code=503, detail=str(exc))
+
+
+@app.post("/api/query")
+async def query_orca(request: QueryRequest):
+    """Route a natural-language question to relevant ORCA capabilities.
+
+    Keyword planning is deterministic and auditable. Ecosystem analysis still uses
+    the selected demo/database scenario until live ecological providers are wired in.
+    """
+    try:
+        plan = plan_query(request.query)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    response: Dict[str, Any] = {
+        "query": request.query,
+        "plan": plan.to_dict(),
+        "analysis": None,
+        "marine_conditions": None,
+        "notice": None,
+    }
+
+    if plan.intent == "marine_conditions":
+        if request.latitude is None or request.longitude is None:
+            response["notice"] = "Provide both latitude and longitude to retrieve a live wave forecast."
+            return response
+        try:
+            response["marine_conditions"] = await get_marine_conditions(
+                request.latitude, request.longitude
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        except MarineProviderError as exc:
+            logger.warning("Marine forecast unavailable: %s", exc)
+            raise HTTPException(status_code=503, detail=str(exc))
+        response["notice"] = (
+            "Wave forecast context only; this is not an official maritime warning "
+            "or a vessel-specific safety clearance."
+        )
+        return response
+
+    scenarios = load_scenarios()
+    scenario = scenarios.get(request.scenario_id)
+    if scenario is None:
+        raise HTTPException(status_code=404, detail="Unknown scenario_id.")
+
+    try:
+        if DATA_MODE == "demo":
+            state = scenario_state_from_json(scenario)
+            data_source = "demo scenario JSON (simulated/reference data)"
+        elif DATA_MODE == "database":
+            state = scenario_state_from_database(request.scenario_id)
+            data_source = "PostgreSQL"
+        else:
+            raise HTTPException(
+                status_code=500,
+                detail="ORCA_DATA_MODE must be either 'demo' or 'database'.",
+            )
+
+        numeric_state = {
+            key: value
+            for key, value in state.items()
+            if isinstance(value, (int, float)) and not isinstance(value, bool)
+        }
+        anomalies = detector.calculate_z_scores(numeric_state)
+        analysis = await orchestrator.run_analysis(
+            state, anomalies, selected_agent_names=plan.selected_agents
+        )
+        analysis.data_source = data_source
+        response["analysis"] = analysis.model_dump(mode="json")
+        response["notice"] = (
+            "PFZ discovery is not live or validated yet; any analysis returned here "
+            "is a scenario-based prototype assessment."
+            if plan.intent == "potential_fishing_zone"
+            else "Scenario-based prototype analysis; do not treat scores as validated scientific predictions."
+        )
+        return response
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Natural-language query analysis failed")
+        raise HTTPException(
+            status_code=500,
+            detail="Query analysis failed. Check the server logs for the underlying error.",
         )

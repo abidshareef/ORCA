@@ -48,3 +48,56 @@ def test_each_demo_scenario_runs_through_all_agents():
 def test_unknown_scenario_returns_404():
     response = client.post("/api/analyze", json={"scenario_id": "does_not_exist"})
     assert response.status_code == 404
+
+
+def test_natural_language_query_routes_to_relevant_agent():
+    response = client.post(
+        "/api/query",
+        json={"query": "Check pollution levels", "scenario_id": "pollution_event"},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["plan"]["intent"] == "ecosystem_assessment"
+    assert payload["plan"]["selected_agents"] == ["Pollution Detection Agent"]
+    assert len(payload["analysis"]["agents"]) == 1
+    assert "prototype" in payload["notice"].lower()
+
+
+def test_pfz_query_discloses_missing_live_provider():
+    response = client.post(
+        "/api/query",
+        json={"query": "Find a potential fishing zone today"},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["plan"]["intent"] == "potential_fishing_zone"
+    assert payload["analysis"] is not None
+    assert "not live or validated yet" in payload["notice"]
+
+
+def test_marine_conditions_query_requires_coordinates():
+    response = client.post(
+        "/api/query",
+        json={"query": "Are the waves safe for a small boat today?"},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["plan"]["intent"] == "marine_conditions"
+    assert payload["marine_conditions"] is None
+    assert "latitude and longitude" in payload["notice"]
+
+
+def test_query_rejects_invalid_coordinates():
+    response = client.post(
+        "/api/query",
+        json={"query": "Wave forecast", "latitude": 95, "longitude": 0},
+    )
+    assert response.status_code == 422
+
+
+def test_analysis_reports_actual_data_completeness():
+    response = client.post("/api/analyze", json={"scenario_id": "normal_ocean"})
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["data_quality"]["completeness"] == 1.0
+    assert payload["uncertainty"]["data_gap"] == 0.0

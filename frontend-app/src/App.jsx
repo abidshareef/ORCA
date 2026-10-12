@@ -36,6 +36,12 @@ export default function App() {
   const [apiStatus, setApiStatus] = useState("checking");
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
+  const [queryText, setQueryText] = useState("");
+  const [queryLatitude, setQueryLatitude] = useState("");
+  const [queryLongitude, setQueryLongitude] = useState("");
+  const [queryResult, setQueryResult] = useState(null);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [queryError, setQueryError] = useState("");
 
   const selectedScenario = useMemo(
     () => scenarios.find((item) => item.id === scenarioId) || FALLBACK_SCENARIOS[0],
@@ -89,6 +95,41 @@ export default function App() {
       setApiStatus("offline");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runQuery = async (event) => {
+    event.preventDefault();
+    setQueryLoading(true);
+    setQueryError("");
+    setQueryResult(null);
+    try {
+      const payload = {
+        query: queryText,
+        scenario_id: scenarioId,
+      };
+      if (queryLatitude.trim() !== "" && queryLongitude.trim() !== "") {
+        payload.latitude = Number(queryLatitude);
+        payload.longitude = Number(queryLongitude);
+      }
+      const response = await fetch(`${API_BASE}/api/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.detail || "Query failed");
+      setQueryResult(result);
+      if (result.analysis) {
+        setAnalysis(result.analysis);
+        setLastUpdated(new Date().toLocaleTimeString());
+      }
+      setApiStatus("online");
+    } catch (err) {
+      setQueryError(`${err.message}. Check the API URL and backend status.`);
+      setApiStatus("offline");
+    } finally {
+      setQueryLoading(false);
     }
   };
 
@@ -151,6 +192,42 @@ export default function App() {
       </section>
 
       {error && <div className="error-banner" role="alert"><strong>Analysis unavailable</strong><span>{error}</span><button onClick={() => { checkApi(); runAnalysis(scenarioId); }}>Retry</button></div>}
+
+      <section className="query-panel panel">
+        <div className="control-copy">
+          <span className="eyebrow">QUERY ROUTER · PROTOTYPE</span>
+          <h2>Ask ORCA a marine question</h2>
+          <p>Routes your question to relevant capabilities. Live wave forecasts require coordinates; ecosystem answers still use scenario data.</p>
+        </div>
+        <form className="query-form" onSubmit={runQuery}>
+          <label htmlFor="orca-query">Question</label>
+          <input id="orca-query" value={queryText} onChange={(event) => setQueryText(event.target.value)} minLength={3} maxLength={1000} placeholder="e.g. Check pollution levels, or what are the waves like?" required />
+          <div className="query-coordinate-fields">
+            <label>Latitude<input inputMode="decimal" value={queryLatitude} onChange={(event) => setQueryLatitude(event.target.value)} placeholder="e.g. 15.5" /></label>
+            <label>Longitude<input inputMode="decimal" value={queryLongitude} onChange={(event) => setQueryLongitude(event.target.value)} placeholder="e.g. 70.5" /></label>
+            <button className="primary-button" type="submit" disabled={queryLoading}>{queryLoading ? <><span className="spinner" /> Routing</> : "Ask ORCA"}</button>
+          </div>
+        </form>
+      </section>
+
+      {queryError && <div className="error-banner" role="alert"><strong>Query unavailable</strong><span>{queryError}</span></div>}
+      {queryResult && (
+        <section className="query-result panel" aria-live="polite">
+          <div className="panel-heading"><div><span className="eyebrow">QUERY PLAN</span><h3>{queryResult.plan.intent.replaceAll("_", " ")}</h3></div><span className="map-tag">{queryResult.plan.selected_agents.length} agents selected</span></div>
+          <p className="query-question">“{queryResult.query}”</p>
+          <div className="query-chip-row">{queryResult.plan.selected_agents.map((agent) => <span className="query-chip" key={agent}>{agent}</span>)}</div>
+          {queryResult.marine_conditions && (
+            <div className="marine-condition-grid">
+              <div><span>WAVE HEIGHT</span><strong>{queryResult.marine_conditions.wave_height_m.toFixed(1)} m</strong></div>
+              <div><span>WAVE PERIOD</span><strong>{queryResult.marine_conditions.wave_period_s == null ? "—" : `${queryResult.marine_conditions.wave_period_s.toFixed(1)} s`}</strong></div>
+              <div><span>DISPLAY BAND</span><strong>{queryResult.marine_conditions.display_band.replaceAll("_", " ")}</strong></div>
+              <div><span>FORECAST TIME</span><strong>{new Date(queryResult.marine_conditions.forecast_time_utc).toLocaleString()}</strong></div>
+            </div>
+          )}
+          {queryResult.notice && <p className="query-notice">{queryResult.notice}</p>}
+          {queryResult.plan.limitations.map((limitation) => <p className="query-limitation" key={limitation}>{limitation}</p>)}
+        </section>
+      )}
 
       <section className="section-heading">
         <div><span className="eyebrow">SYSTEM OUTPUT</span><h2>Risk overview</h2></div>

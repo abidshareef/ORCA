@@ -1,5 +1,5 @@
 import asyncio
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from backend.models.ecosystem import AgentFinding, RiskAnalysis, Location
 
 from backend.agents.ocean import OceanMonitoringAgent
@@ -18,9 +18,22 @@ class OrcaOrchestrator:
             FisheriesAgent()
         ]
 
-    async def run_analysis(self, state: Dict[str, Any], anomalies: List[Any]) -> RiskAnalysis:
-        # 1. Parallel Execution of Specialized Agents
-        tasks = [agent.analyze(state, anomalies) for agent in self.agents]
+    async def run_analysis(
+        self,
+        state: Dict[str, Any],
+        anomalies: List[Any],
+        selected_agent_names: Optional[List[str]] = None,
+    ) -> RiskAnalysis:
+        # A query can select a subset; an omitted selection preserves the full pipeline.
+        selected_agents = self.agents
+        if selected_agent_names:
+            requested = set(selected_agent_names)
+            selected_agents = [agent for agent in self.agents if agent.name in requested]
+        if not selected_agents:
+            selected_agents = self.agents
+
+        # 1. Parallel Execution of the selected specialized agents.
+        tasks = [agent.analyze(state, anomalies) for agent in selected_agents]
         findings = await asyncio.gather(*tasks)
 
         # 2. Confidence-Weighted Aggregation
@@ -95,6 +108,28 @@ class OrcaOrchestrator:
         # 7. Ecosystem Health Index (EHI)
         ehi = 1.0 - risk_score
 
+        # Report measurable input completeness instead of hard-coded quality claims.
+        expected_parameters = [
+            "temperature", "salinity", "dissolved_oxygen", "ph", "chlorophyll",
+            "turbidity", "pollution", "biodiversity", "fisheries", "current",
+        ]
+        present_parameters = [
+            key for key in expected_parameters
+            if isinstance(state.get(key), (int, float))
+            and not isinstance(state.get(key), bool)
+        ]
+        completeness = len(present_parameters) / len(expected_parameters)
+        data_gap = 1.0 - completeness
+        adjusted_confidence = (
+            sum(f.confidence for f in findings) / len(findings)
+        ) * completeness
+        if completeness < 0.7:
+            recommendation = (
+                f"DATA QUALITY WARNING: only {completeness:.0%} of expected ecosystem "
+                "parameters are available. Treat this assessment as provisional and "
+                "collect/validate missing observations before acting. " + recommendation
+            )
+
         return RiskAnalysis(
             location=Location(
                 latitude=state.get("latitude", 0),
@@ -104,7 +139,7 @@ class OrcaOrchestrator:
             timestamp=state.get("timestamp"),
             risk_score=risk_score,
             risk_level=risk_level,
-            confidence=sum(f.confidence for f in findings) / len(findings),
+            confidence=adjusted_confidence,
             ecosystem_health=ehi,
             anomalies=[{"parameter": a.parameter, "z_score": a.z_score, "severity": a.severity} for a in anomalies],
             contributors=[{"agent": f.agent, "contribution": f.prediction} for f in findings],
@@ -113,6 +148,12 @@ class OrcaOrchestrator:
             interactions=interactions,
             explanation=explanation,
             recommendation=recommendation,
-            uncertainty={"model_variance": 0.05, "data_gap": 0.1},
-            data_quality={"completeness": 0.95, "reliability": 0.9}
+            uncertainty={
+                "data_gap": round(data_gap, 3),
+            },
+            data_quality={
+                "completeness": round(completeness, 3),
+                "available_parameters": float(len(present_parameters)),
+                "expected_parameters": float(len(expected_parameters)),
+            }
         )

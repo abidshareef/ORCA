@@ -663,3 +663,13 @@ For the stabilized demo path, see [docs/EVENT_RUNBOOK.md](docs/EVENT_RUNBOOK.md)
 - Render deployment configuration is in `render.yaml`; Vercel setup instructions are in the event runbook.
 
 **Data boundary:** demo scenarios are illustrative, not live marine observations. ORCA is a research decision-support prototype, not an official marine-warning service.
+
+
+## Query routing and live marine forecast (prototype)
+
+- `POST /api/query` accepts a natural-language question and returns an explicit, deterministic plan showing selected domain agents, data-source needs and known limitations.
+- `GET /api/marine/conditions?latitude=15.5&longitude=70.5` retrieves a wave forecast from the public Open-Meteo Marine API. Network access is required.
+- Wave bands are display-only thresholds, not official warnings or a vessel-specific safety assessment. Check local maritime authority notices before making operational decisions.
+- Ecosystem analysis and PFZ responses still use controlled scenarios or configured database observations. The query planner does not pretend these are live satellite-derived observations.
+- Input completeness is calculated from the ten expected ecosystem parameters instead of returning hard-coded completeness/reliability values. The fixed agent confidence scores remain prototype assumptions and require calibration.
+- Query routing uses transparent keyword rules. It is not yet an LLM-based autonomous planner, and live PFZ discovery, multilingual conversation, route planning and geofencing remain future integrations.
