@@ -3,10 +3,10 @@
     {
       "id": "normal_ocean",
       "name": "Normal Ocean State",
-      "description": "Balanced ecosystem with parameters within seasonal baselines.",
+      "description": "Illustrative baseline conditions with most parameters near reference ranges.",
       "locations": [
         {
-          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "latitude": 15.5, "longitude": 70.5, "depth": 10,
           "state": {
             "temperature": 26.5, "salinity": 35.1, "dissolved_oxygen": 6.2, "ph": 8.1,
             "chlorophyll": 0.4, "turbidity": 1.2, "pollution": 0.05, "biodiversity": 0.85,
@@ -18,10 +18,10 @@
     {
       "id": "marine_heatwave",
       "name": "Marine Heatwave",
-      "description": "Significant temperature spike causing stress to marine life.",
+      "description": "Illustrative elevated temperature and ecosystem-stress conditions.",
       "locations": [
         {
-          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "latitude": 15.5, "longitude": 70.5, "depth": 10,
           "state": {
             "temperature": 29.8, "salinity": 35.3, "dissolved_oxygen": 5.1, "ph": 8.0,
             "chlorophyll": 0.6, "turbidity": 1.4, "pollution": 0.08, "biodiversity": 0.62,
@@ -33,10 +33,10 @@
     {
       "id": "pollution_event",
       "name": "Pollution Event",
-      "description": "Chemical/Plastic contamination detected with high turbidity.",
+      "description": "Illustrative elevated pollution and turbidity indicators.",
       "locations": [
         {
-          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "latitude": 15.5, "longitude": 70.5, "depth": 10,
           "state": {
             "temperature": 26.7, "salinity": 34.8, "dissolved_oxygen": 4.2, "ph": 7.7,
             "chlorophyll": 0.3, "turbidity": 4.5, "pollution": 0.82, "biodiversity": 0.45,
@@ -48,10 +48,10 @@
     {
       "id": "combined_crisis",
       "name": "Combined Ecosystem Crisis",
-      "description": "Temperature spike, low oxygen, and biodiversity decline forming a systemic risk.",
+      "description": "Illustrative combination of warming, low oxygen and ecosystem stress.",
       "locations": [
         {
-          "latitude": 17.385, "longitude": 78.486, "depth": 10,
+          "latitude": 15.5, "longitude": 70.5, "depth": 10,
           "state": {
             "temperature": 30.2, "salinity": 35.2, "dissolved_oxygen": 3.8, "ph": 7.9,
             "chlorophyll": 0.7, "turbidity": 2.1, "pollution": 0.15, "biodiversity": 0.38,

@@ -647,3 +647,19 @@ https://github.com/abidshareef/ORCA
 ## License
 
 See the repository license for the current licensing terms.
+
+
+---
+
+# Event-ready workflow (October 2026)
+
+For the stabilized demo path, see [docs/EVENT_RUNBOOK.md](docs/EVENT_RUNBOOK.md).
+
+- The API's default `ORCA_DATA_MODE=demo` reads the four controlled scenarios in `data/demo/scenarios.json`.
+- `GET /api/health` is a liveness check; `GET /api/ready` verifies that the configured data path is available.
+- `POST /api/analyze` executes anomaly detection, the five specialist agents and confidence-weighted synthesis.
+- The standalone Vite dashboard lives in `frontend-app/`. The legacy `frontend` entry is a Git submodule pointer without a usable URL in this repository, so the new dashboard is deliberately independent of it.
+- CI compiles the Python backend, runs API integration tests and builds the frontend.
+- Render deployment configuration is in `render.yaml`; Vercel setup instructions are in the event runbook.
+
+**Data boundary:** demo scenarios are illustrative, not live marine observations. ORCA is a research decision-support prototype, not an official marine-warning service.
