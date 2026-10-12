@@ -1,4 +1,5 @@
 import asyncio
+import math
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 from backend.models.ecosystem import AgentFinding, RiskAnalysis, Location
@@ -30,9 +31,6 @@ class OrcaOrchestrator:
         if selected_agent_names:
             requested = set(selected_agent_names)
             selected_agents = [agent for agent in self.agents if agent.name in requested]
-        if not selected_agents:
-            selected_agents = self.agents
-
         expected_parameters = [
             "temperature", "salinity", "dissolved_oxygen", "ph", "chlorophyll",
             "turbidity", "pollution", "biodiversity", "fisheries", "current",
@@ -41,12 +39,35 @@ class OrcaOrchestrator:
             key for key in expected_parameters
             if isinstance(state.get(key), (int, float))
             and not isinstance(state.get(key), bool)
+            and math.isfinite(float(state.get(key)))
         ]
         completeness = len(present_parameters) / len(expected_parameters)
 
-        # Missing all ecological measurements must never be presented as LOW risk.
-        # Return an explicit unknown result instead of running agents against defaults.
-        if not present_parameters:
+        # Do not run a domain agent on fabricated defaults when its required inputs
+        # are absent. This makes partial database records fail closed.
+        required_by_agent = {
+            "Ocean Monitoring Agent": ("temperature", "salinity", "dissolved_oxygen", "ph", "turbidity"),
+            "Biodiversity Agent": ("biodiversity", "fisheries"),
+            "Pollution Detection Agent": ("pollution", "turbidity"),
+            "Climate & Oceanographic Agent": ("temperature", "ph", "current"),
+            "Fisheries Agent": ("fisheries", "temperature", "dissolved_oxygen"),
+        }
+        selected_agents = [
+            agent for agent in selected_agents
+            if all(
+                key in present_parameters
+                for key in required_by_agent.get(agent.name, ())
+            )
+        ]
+
+        # No complete domain input set means there is no defensible risk estimate.
+        if not present_parameters or not selected_agents:
+            if not present_parameters:
+                explanation = "No ecological measurements are available. ORCA cannot estimate ecosystem risk until valid observations are supplied."
+                recommendation = "DATA QUALITY WARNING: no expected ecosystem parameters are available. Load valid observations and retry; do not interpret this result as low risk."
+            else:
+                explanation = "Some ecological measurements are available, but none of the selected domain agents has all required inputs. ORCA cannot estimate risk from this incomplete record."
+                recommendation = "DATA QUALITY WARNING: required inputs for the selected domain agents are missing. Load and validate the missing observations, then retry; do not interpret this result as low risk."
             return RiskAnalysis(
                 location=Location(
                     latitude=state.get("latitude", 0),
@@ -66,12 +87,12 @@ class OrcaOrchestrator:
                 agents=[],
                 evidence=[],
                 interactions=[],
-                explanation="No ecological measurements are available. ORCA cannot estimate ecosystem risk until valid observations are supplied.",
-                recommendation="DATA QUALITY WARNING: no expected ecosystem parameters are available. Load valid observations and retry; do not interpret this result as low risk.",
-                uncertainty={"data_gap": 1.0},
+                explanation=explanation,
+                recommendation=recommendation,
+                uncertainty={"data_gap": round(1.0 - completeness, 3)},
                 data_quality={
-                    "completeness": 0.0,
-                    "available_parameters": 0.0,
+                    "completeness": round(completeness, 3),
+                    "available_parameters": float(len(present_parameters)),
                     "expected_parameters": float(len(expected_parameters)),
                 },
             )
