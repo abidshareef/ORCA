@@ -19,6 +19,10 @@
 
 ---
 
+## Delivery and operational status
+
+The release acceptance checklist, local test commands, deployment sequence, and explicit current limitations are documented in [`docs/RELEASE_CHECKLIST_2026-10-14.md`](docs/RELEASE_CHECKLIST_2026-10-14.md). The checked-in ecosystem scenarios are illustrative demo data; the live external adapter currently provides wave-forecast context only.
+
 ## The one-line idea
 
 **ORCA turns fragmented marine signals into structured, explainable intelligence by coordinating specialized domain agents through a central orchestration layer.**
