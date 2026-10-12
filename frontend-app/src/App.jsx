@@ -124,8 +124,8 @@ export default function App() {
       if (result.analysis) {
         setAnalysis(result.analysis);
         setLastUpdated(new Date().toLocaleTimeString());
-      } else if (result.plan?.intent === "marine_conditions") {
-        // Do not leave an unrelated ecosystem scenario visible under a wave forecast.
+      } else if (["marine_conditions", "unsupported_query"].includes(result.plan?.intent)) {
+        // Do not leave an unrelated ecosystem scenario visible under a non-analysis response.
         setAnalysis(null);
         setLastUpdated("");
       }
