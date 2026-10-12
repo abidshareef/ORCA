@@ -34,7 +34,7 @@ PFZ_TERMS = ("pfz", "potential fishing zone", "best place to fish", "fishing zon
 
 
 def plan_query(query: str) -> QueryPlan:
-    normalized = re.sub(r"\\s+", " ", query.casefold()).strip()
+    normalized = re.sub(r"\s+", " ", query.casefold()).strip()
     if not normalized:
         raise ValueError("query must not be empty")
 
