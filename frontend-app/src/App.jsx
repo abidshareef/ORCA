@@ -37,8 +37,8 @@ export default function App() {
   const [error, setError] = useState("");
   const [lastUpdated, setLastUpdated] = useState("");
   const [queryText, setQueryText] = useState("");
-  const [queryLatitude, setQueryLatitude] = useState("15.5");
-  const [queryLongitude, setQueryLongitude] = useState("70.5");
+  const [queryLatitude, setQueryLatitude] = useState("");
+  const [queryLongitude, setQueryLongitude] = useState("");
   const [queryResult, setQueryResult] = useState(null);
   const [queryLoading, setQueryLoading] = useState(false);
   const [queryError, setQueryError] = useState("");
@@ -203,8 +203,8 @@ export default function App() {
           <label htmlFor="orca-query">Question</label>
           <input id="orca-query" value={queryText} onChange={(event) => setQueryText(event.target.value)} minLength={3} maxLength={1000} placeholder="e.g. Check pollution levels, or what are the waves like?" required />
           <div className="query-coordinate-fields">
-            <label>Latitude<input inputMode="decimal" value={queryLatitude} onChange={(event) => setQueryLatitude(event.target.value)} placeholder="15.5" /></label>
-            <label>Longitude<input inputMode="decimal" value={queryLongitude} onChange={(event) => setQueryLongitude(event.target.value)} placeholder="70.5" /></label>
+            <label>Latitude<input inputMode="decimal" value={queryLatitude} onChange={(event) => setQueryLatitude(event.target.value)} placeholder="e.g. 15.5" /></label>
+            <label>Longitude<input inputMode="decimal" value={queryLongitude} onChange={(event) => setQueryLongitude(event.target.value)} placeholder="e.g. 70.5" /></label>
             <button className="primary-button" type="submit" disabled={queryLoading}>{queryLoading ? <><span className="spinner" /> Routing</> : "Ask ORCA"}</button>
           </div>
         </form>
