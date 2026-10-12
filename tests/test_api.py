@@ -144,3 +144,16 @@ def test_marine_query_returns_live_source_metadata(monkeypatch):
     assert payload["marine_conditions"]["source"] == "Open-Meteo Marine API"
     assert payload["marine_conditions"]["missing_optional_fields"] == ["wave_period_s"]
     assert "not an official maritime warning" in payload["marine_conditions"]["limitations"][0].lower()
+
+
+def test_unrecognized_query_returns_no_analysis():
+    response = client.post(
+        "/api/query",
+        json={"query": "What is the capital of India?"},
+    )
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert payload["plan"]["intent"] == "unsupported_query"
+    assert payload["plan"]["selected_agents"] == []
+    assert payload["analysis"] is None
+    assert "no agents were run" in payload["notice"].lower()

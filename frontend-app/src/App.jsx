@@ -124,8 +124,8 @@ export default function App() {
       if (result.analysis) {
         setAnalysis(result.analysis);
         setLastUpdated(new Date().toLocaleTimeString());
-      } else if (result.plan?.intent === "marine_conditions") {
-        // Do not leave an unrelated ecosystem scenario visible under a wave forecast.
+      } else if (["marine_conditions", "unsupported_query"].includes(result.plan?.intent)) {
+        // Do not leave an unrelated ecosystem scenario visible under a non-analysis response.
         setAnalysis(null);
         setLastUpdated("");
       }
@@ -218,7 +218,7 @@ export default function App() {
       {queryError && <div className="error-banner" role="alert"><strong>Query unavailable</strong><span>{queryError}</span></div>}
       {queryResult && (
         <section className="query-result panel" aria-live="polite">
-          <div className="panel-heading"><div><span className="eyebrow">QUERY PLAN</span><h3>{queryResult.plan.intent.replaceAll("_", " ")}</h3></div><span className="map-tag">{queryResult.plan.selected_agents.length ? `${queryResult.plan.selected_agents.length} agents selected` : "Live provider route"}</span></div>
+          <div className="panel-heading"><div><span className="eyebrow">QUERY PLAN</span><h3>{queryResult.plan.intent.replaceAll("_", " ")}</h3></div><span className="map-tag">{queryResult.plan.selected_agents.length ? `${queryResult.plan.selected_agents.length} agents selected` : queryResult.plan.intent === "marine_conditions" ? "Live provider route" : "No matching capability"}</span></div>
           <p className="query-question">“{queryResult.query}”</p>
           <div className="query-chip-row">{queryResult.plan.selected_agents.map((agent) => <span className="query-chip" key={agent}>{agent}</span>)}</div>
           {queryResult.marine_conditions && (

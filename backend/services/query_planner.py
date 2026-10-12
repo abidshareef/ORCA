@@ -58,13 +58,18 @@ def plan_query(query: str) -> QueryPlan:
             selected.append("Fisheries Agent")
         if "Ocean Monitoring Agent" not in selected:
             selected.append("Ocean Monitoring Agent")
-    else:
+    elif selected:
         intent = "ecosystem_assessment"
         sources = ["ORCA scenario data (demo mode) or configured PostgreSQL observations"]
         limitations = ["Domain agents currently use prototype heuristics, not scientifically validated predictive models."]
-
-    if not selected and not safety:
-        selected = list(AGENT_KEYWORDS.keys())
+    else:
+        intent = "unsupported_query"
+        selected = []
+        sources = []
+        limitations = [
+            "This question does not match an implemented ORCA capability. No agents were run and no scenario result was generated.",
+            "Supported workflows: ocean/water-quality questions, fisheries/PFZ prototype assessment, biodiversity/ecosystem questions, climate signals, pollution indicators, and wave forecasts.",
+        ]
 
     return QueryPlan(
         intent=intent,
