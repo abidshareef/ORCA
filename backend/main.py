@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +15,7 @@ from backend.ml.anomaly import AnomalyDetector
 from backend.models.ecosystem import RiskAnalysis
 from backend.services.query_planner import plan_query
 from backend.services.marine_provider import get_marine_conditions, MarineProviderError
+from backend.services.pfz_ranker import rank_candidates
 
 logger = logging.getLogger("orca")
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -58,6 +59,22 @@ class QueryRequest(BaseModel):
     scenario_id: str = Field(default="normal_ocean", min_length=1, max_length=100)
     latitude: Optional[float] = Field(default=None, ge=-90, le=90)
     longitude: Optional[float] = Field(default=None, ge=-180, le=180)
+
+
+class PFZCandidate(BaseModel):
+    id: str = Field(min_length=1, max_length=100)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    observed_at: datetime
+    chlorophyll_mg_m3: float = Field(gt=0, le=1000)
+    sea_surface_temperature_c: float = Field(ge=-3, le=45)
+    dissolved_oxygen_mg_l: float = Field(ge=0, le=30)
+    source: str = Field(min_length=2, max_length=250)
+    source_url: Optional[str] = Field(default=None, max_length=1000)
+
+
+class PFZRankingRequest(BaseModel):
+    candidates: List[PFZCandidate] = Field(min_length=1, max_length=100)
 
 
 def load_scenarios() -> Dict[str, Dict[str, Any]]:
@@ -237,6 +254,12 @@ async def marine_conditions(
         raise HTTPException(status_code=503, detail=str(exc))
 
 
+@app.post("/api/pfz/rank")
+async def rank_potential_fishing_candidates(request: PFZRankingRequest):
+    """Rank caller-supplied, timestamped candidate observations using an experimental heuristic."""
+    return rank_candidates([candidate.model_dump() for candidate in request.candidates])
+
+
 @app.post("/api/query")
 async def query_orca(request: QueryRequest):
     """Route a natural-language question to relevant ORCA capabilities.
@@ -263,6 +286,14 @@ async def query_orca(request: QueryRequest):
             "No agents were run and no scenario analysis was generated. Try a question "
             "about ocean conditions, water quality, fisheries/PFZ, biodiversity, climate, "
             "pollution, or a wave forecast."
+        )
+        return response
+
+    if plan.intent == "potential_fishing_zone":
+        response["notice"] = (
+            "Live PFZ discovery is not available. ORCA did not generate a real fishing-zone "
+            "recommendation from demo scenarios. To experiment with ranking, submit timestamped "
+            "observations to POST /api/pfz/rank; its heuristic is unvalidated and not an operational forecast."
         )
         return response
 
